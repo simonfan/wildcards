@@ -22,6 +22,7 @@ define(['buildable','underscore'], function(Buildable, undef) {
 		retrieve: function(str, filter, original) {
 			var original = original || str,		// the original string. if not set, defaults to the string passed
 				aliases = this.aliases,
+				filter = filter || function() { return true },
 				res = {};
 
 			res[aliases.item] = this.cards[ str ];
@@ -29,7 +30,7 @@ define(['buildable','underscore'], function(Buildable, undef) {
 
 			// 1: if the item is not set
 			// 2: if the filter is a function AND the filter returns false
-			if (typeof res[aliases.item] === 'undefined' || (typeof filter === 'function' && !filter(res) ) ) {
+			if (typeof res[aliases.item] === 'undefined' || !filter(res) ) {
 
 				////////////////////////////////////
 				// remove last part of the string //
@@ -52,7 +53,7 @@ define(['buildable','underscore'], function(Buildable, undef) {
 				}
 			}
 
-			return res[aliases.item] ? res : undefined;
+			return ( res[aliases.item] && filter(res) ) ? res : false;
 		},
 
 		// remove the last portion of the string
@@ -82,7 +83,7 @@ define(['buildable','underscore'], function(Buildable, undef) {
 
 				return typeof item === 'function' ? item.apply(this.context, args) : retrieved;
 			} else {
-				return undefined;
+				return false;
 			}
 		}
 	};
