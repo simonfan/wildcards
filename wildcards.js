@@ -1,40 +1,67 @@
 define(['buildable','underscore'], function(Buildable, undef) {
 
-	// Array of patterns ordered by pattern priority
-	var PATTERNS = [
-		{
-			name: 'fixed:*anything',
-			regexp: /^.+:\*$/,
-		//	example: 'place:*',
+	var wild = {
+		card: function(name, obj) {
+			if (typeof name === 'object') {
+				var _this = this;
+				_.each(name, function(obj, name) {
+					_this.wild('card', name, obj);
+				});
 
-			// function receives the name of the card and returns a 
-			// regexp capable of matching it against any string
-			buildRegexp: function(name) {
-				return new RegExp('^' + name.replace(/\*$/,'') + '.*$' );
-			},
-			tokens: function(str, card) {
-				var separator = card.separator || ':',
-					substr = str.split(':')[1],
-					tokens = substr.split(separator);
-				return tokens;
+			} else {
+				// remove the token part
+				var path = name.replace(this.token,'');
+
+				// save the card
+				this.cards[ path ] = obj;
+			}
+
+			return this;
+		},
+
+		retrieve: function(str, original) {
+			var _this = this,
+				original = original || str;
+
+			// try to retrieve directly by name
+			if (this.cards[ str ]) {
+				if (this.cards[ str ]) {
+					return {
+						item: this.cards[ str ],
+						tokens: original.replace(str,'').split(this.delimiter)
+					};
+				}
+
+			} else {
+				// remove the last portion of the string
+				str = str.split(this.delimiter);
+				str = _.compact(str).slice(0, str.length -1);	// remove empty strings and the last
+
+				if (str.length > 0) {
+					str = str.join(this.delimiter) + this.delimiter;
+
+					console.log(str);
+					return this.wild('retrieve', str, original);
+				} else {
+					return undefined;
+				}
 			}
 		},
-		{
-			name: '*anything',
-			regexp: /^\*$/,
-		//	example: '*',
-			buildRegexp: function(name) {
-				return /.+/;
-			},
-			tokens: function(str, card) {
-				var separator = card.separator || ':',
-					substr = str.split(':')[1],
-					tokens = substr.split(separator);
 
-				return tokens;
-			}
+		exec: function() {
+			var args = _.args(arguments);
+			args.unshift('retrieve');
+
+			var retrieved = this.wild.apply(this, args);
+
+			if (typeof retrieved === 'undefined') { return undefined; }
+
+			console.log(retrieved);
+
+			return (typeof retrieved.item === 'function') ? retrieved.item.apply(this.context, retrieved.tokens) : retrieved;
 		}
-	];
+	};
+
 
 	var Wildcards = Object.create(Buildable);
 	Wildcards.extend({
@@ -42,65 +69,23 @@ define(['buildable','underscore'], function(Buildable, undef) {
 		init: function(options) {
 			_.bindAll(this, 'card');
 
+			this.delimiter = options.delimiter || ':';
+
+			this.token = options.token || /\*.*/;
+
+			this.context = options.context;
+
 			this.cards = {};
 		},
 
-		card: function(card) {
-			/*
-				card: {
-					name: string,
-					callback: function,
-					context: object,
-					separator: string
-				}
-			*/
-
-			if (_.isArray(card)) {
-				return _.each(card, this.card);
-			} else {
-				//////////////////////////////////
-				/// 1: try to match a pattern ////
-				//////////////////////////////////
-				var pattern = _.find(PATTERNS, function(pattern, index) {
-					return pattern.regexp.exec(card.name);
-				});
-
-				if (!pattern) {
-					throw new Error('No pattern for this type of card. Visit documentation for more info.')
-				}
-
-				this.cards[ pattern.name ] = this.cards[ pattern.name ] || [];
-				this.cards[ pattern.name ].push(
-					_.extend(card, { regexp: pattern.buildRegexp(card.name) }) 
-				);
-
-				return this;
-			}
-
+		wild: function(method) {
+			var args = _.args(arguments, 1);
+			return wild[ method ].apply(this, args);
 		},
 
-		match: function(string) {
-
-			var _this = this,
-				pattern = false,
-				rescard = false;
-
-			// loop according to the order defined in the PATTERNS array
-			pattern = _.find(PATTERNS, function(pattern, index) {
-
-				// inside a card pattern group, loop according to the order of addition
-				rescard = _.find(_this.cards[ pattern.name ], function( card, index ) {
-					return card.regexp.exec(string);
-				});
-
-				return rescard;
-			});
-
-			if (pattern && rescard) {
-				var tokens = pattern.tokens(string, rescard)
-				return rescard.callback.apply(rescard.context, tokens);
-			}
-		},
+		card: wild.card,
+		retrieve: wild.retrieve,
+		exec: wild.exec
 	});
 
 	return Wildcards;

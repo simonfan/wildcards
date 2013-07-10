@@ -1,22 +1,22 @@
 define(['wildcards'], function(Wildcards) {
 
 
-	window.wildcards = Wildcards.build();
-
-	wildcards.card([
-		{
-			name: 'place:*',
-			callback: function(place) { alert('place ' + place); }
-		},
-		{
-			name: 'time:*',
-			callback: function(time) { alert('about time ' + time); }
+	window.wildcards = Wildcards.build({
+		token: /%$/,
+		context: {
+			a: 'lalala'
 		}
-	]);
-
-	wildcards.card({
-		name: '*',
-		callback: function(anything) { alert('anything ' + anything) }
 	});
 
+
+	wildcards.card('fruits:yellow:%', function(fruit) { console.log( this.a + ' ' + fruit)} );
+
+	wildcards.card({
+		'fruits:%': function(fruits) {
+			console.log('ANY! ' + fruits);
+		},
+		'fruits': function() {
+			console.log('aaaaallll fruits');
+		}
+	})
 });
