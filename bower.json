@@ -1,16 +1,15 @@
 {
-	"name": "Boilerplate Component",
+	"name": "wildcards",
 	"version": "0.0.1",
 	"dependencies": {
-		"jquery": "lastest",
 		"underscore": "latest",
-		"backbone": "latest",
-		"requirejs": "latest",
 
-		"buildable": "simonfan/buildable",
+		"buildable": "simonfan/buildable"
+	},
 
+	"devDependencies": {
 	    "qunit": "latest"
 	},
 
-	"main": "component.js"
+	"main": "wildcards.js"
 }
