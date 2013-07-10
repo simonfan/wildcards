@@ -19,53 +19,71 @@ define(['buildable','underscore'], function(Buildable, undef) {
 			return this;
 		},
 
-		retrieve: function(str, original) {
-			var _this = this,
-				original = original || str,
+		retrieve: function(str, filter, original) {
+			var original = original || str,		// the original string. if not set, defaults to the string passed
 				aliases = this.aliases,
-				res;
+				item, tokens;
 
 			// try to retrieve directly by name
-			if (this.cards[ str ]) {
-				if (this.cards[ str ]) {
-					res = {};
-
-					res[ aliases.item ] = this.cards[ str ];
-					res[ aliases.token ] = original.replace(str,'').split(this.delimiter);
-				}
+			// and pass it to the filter function
+			if (cardExists = this.cards[ str ] && (typeof filter !== 'function' || filter(this.cards[ str ]) ) ) {
+				item = this.cards[ str ];
+				tokens = original.replace(str,'').split(this.delimiter);
 
 			} else {
-				// remove the last portion of the string
-				str = str.split(this.delimiter);
-				str = _.compact(str).slice(0, str.length -1);	// remove empty strings and the last
 
-				if (str.length > 0) {
-					// RECURSIVE
-					str = str.join(this.delimiter) + this.delimiter;
+				////////////////////////////////////
+				// remove last part of the string //
+				////////////////////////////////////
+				str = this.wild('_cutString', str);
 
-					return this.wild('retrieve', str, original);
+				if (str) {
+					// go recursive
+					return this.wild('retrieve', str, filter, original);
 
-				} else {
+				} else if (this.cards[ this.token.str ]) {
+					//////////////////////////////
+					////// LAST RESOURCE /////////
+					//////////////////////////////
 					// as a last resource, check if there is a 'anything' card
 					// which should be named by the tokenRegExp itself
-					if (this.cards[ this.token.str ]) {
-						res = {};
-						res[ aliases.item ] = this.cards[ this.token.str ];
-						res[ aliases.token ] = [original];
-					}
+					item = this.cards[ this.token.str ];
+					token = [original];
 				}
 			}
+
+			var res = {};
+			res[aliases.item] = item;
+			res[aliases.token] = tokens;
 
 			return res;
 		},
 
-		exec: function(str) {
-			var retrieved = this.wild.apply(this, ['retrieve', str]),
-				args = _.args(arguments, 1),
-				aliases = this.aliases;
+		// remove the last portion of the string
+		_cutString: function(str) {
+			str = _.compact( str.split(this.delimiter) );				// remove empty strings and the last
+			str = str.slice(0, str.length -1);
 
-			return (retrieved && typeof retrieved[ aliases.item ] === 'function') ? 
-				retrieved[ aliases.item ].apply(this.context, retrieved[ aliases.token ].concat(args)) : retrieved;
+			if (str.length > 0) {
+				return str.join(this.delimiter) + this.delimiter;
+			} else {
+				return false;
+			}
+		},
+
+		exec: function(str, args, filter) {
+			var retrieved = this.wild.apply(this, ['retrieve', str, filter]),
+				args = _.isArray(args) ? args : [];
+
+			if (retrieved) {
+				var aliases = this.aliases,
+					tokens = retrieved[ aliases.token ] || [];
+					item = retrieved[ aliases.item ];
+
+				return typeof item === 'function' ? item.apply(this.context, tokens.concat(args)) : retrieved;
+			} else {
+				return undefined;
+			}
 		}
 	};
 
