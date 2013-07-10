@@ -52,7 +52,7 @@ define(['buildable','underscore'], function(Buildable, undef) {
 				}
 			}
 
-			return res;
+			return res[aliases.item] ? res : undefined;
 		},
 
 		// remove the last portion of the string
