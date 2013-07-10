@@ -10,7 +10,7 @@ define(['buildable','underscore'], function(Buildable, undef) {
 
 			} else {
 				// remove the tokenRegExp part
-				var path = (name === this.token) ? name : name.replace(this.tokenRegExp,'');
+				var path = (name === this.token.str) ? name : name.replace(this.token.regexp,'');
 
 				// save the card
 				this.cards[ path ] = obj;
@@ -21,15 +21,17 @@ define(['buildable','underscore'], function(Buildable, undef) {
 
 		retrieve: function(str, original) {
 			var _this = this,
-				original = original || str;
+				original = original || str,
+				aliases = this.aliases,
+				res;
 
 			// try to retrieve directly by name
 			if (this.cards[ str ]) {
 				if (this.cards[ str ]) {
-					return {
-						item: this.cards[ str ],
-						tokens: original.replace(str,'').split(this.delimiter)
-					};
+					res = {};
+
+					res[ aliases.item ] = this.cards[ str ];
+					res[ aliases.token ] = original.replace(str,'').split(this.delimiter);
 				}
 
 			} else {
@@ -38,6 +40,7 @@ define(['buildable','underscore'], function(Buildable, undef) {
 				str = _.compact(str).slice(0, str.length -1);	// remove empty strings and the last
 
 				if (str.length > 0) {
+					// RECURSIVE
 					str = str.join(this.delimiter) + this.delimiter;
 
 					return this.wild('retrieve', str, original);
@@ -45,20 +48,24 @@ define(['buildable','underscore'], function(Buildable, undef) {
 				} else {
 					// as a last resource, check if there is a 'anything' card
 					// which should be named by the tokenRegExp itself
-					return {
-						item: this.cards[ this.token ],
-						tokens: [original]
-					};
+					if (this.cards[ this.token.str ]) {
+						res = {};
+						res[ aliases.item ] = this.cards[ this.token.str ];
+						res[ aliases.token ] = [original];
+					}
 				}
 			}
+
+			return res;
 		},
 
 		exec: function(str) {
 			var retrieved = this.wild.apply(this, ['retrieve', str]),
-				args = _.args(arguments, 1);
+				args = _.args(arguments, 1),
+				aliases = this.aliases;
 
-			return (retrieved && typeof retrieved.item === 'function') ? 
-				retrieved.item.apply(this.context, retrieved.tokens.concat(args)) : retrieved;
+			return (retrieved && typeof retrieved[ aliases.item ] === 'function') ? 
+				retrieved[ aliases.item ].apply(this.context, retrieved[ aliases.token ].concat(args)) : retrieved;
 		}
 	};
 
@@ -67,12 +74,24 @@ define(['buildable','underscore'], function(Buildable, undef) {
 	Wildcards.extend({
 
 		init: function(options) {
-			_.bindAll(this, 'card');
+			// alerts
+			if ((!options.token && options.tokenRegExp) || (options.token && !options.tokenRegExp)) {
+				throw new Error('Wildcards: you must set either both tokenRegExp and token or neither one.');
+			}
+
+			_.bindAll(this, 'card','wild');
 
 			this.delimiter = options.delimiter || ':';
 
-			this.token = (options.token && options.tokenRegExp) ? options.token : '*';
-			this.tokenRegExp = (options.token && options.tokenRegExp) ? options.tokenRegExp : /\*.*/;
+			this.token = {
+				str: (options.token && options.tokenRegExp) ? options.token : '*',
+				regexp: (options.token && options.tokenRegExp) ? options.tokenRegExp : /\*.*/,
+			}
+
+			this.aliases = {
+				item: options.itemAlias || 'item',
+				token: options.tokenAlias || 'tokens',
+			};
 
 			this.context = options.context;
 

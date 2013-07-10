@@ -2,6 +2,8 @@ define(['wildcards'], function(Wildcards) {
 
 
 	window.wildcards = Wildcards.build({
+		itemAlias: 'func',
+		tokenAlias: 'fruits',
 		context: {
 			a: 'lalala'
 		}
