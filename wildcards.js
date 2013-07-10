@@ -22,21 +22,21 @@ define(['buildable','underscore'], function(Buildable, undef) {
 		retrieve: function(str, filter, original) {
 			var original = original || str,		// the original string. if not set, defaults to the string passed
 				aliases = this.aliases,
-				item, tokens;
+				res = {};
 
-			// try to retrieve directly by name
-			// and pass it to the filter function
-			if (cardExists = this.cards[ str ] && (typeof filter !== 'function' || filter(this.cards[ str ]) ) ) {
-				item = this.cards[ str ];
-				tokens = original.replace(str,'').split(this.delimiter);
+			res[aliases.item] = this.cards[ str ];
+			res[aliases.token] = original.replace(str,'');
 
-			} else {
+			// 1: if the item is not set
+			// 2: if the filter is a function AND the filter returns false
+			if (typeof res[aliases.item] === 'undefined' || (typeof filter === 'function' && !filter(res) ) ) {
 
 				////////////////////////////////////
 				// remove last part of the string //
 				////////////////////////////////////
 				str = this.wild('_cutString', str);
 
+				// if there is still a string 
 				if (str) {
 					// go recursive
 					return this.wild('retrieve', str, filter, original);
@@ -47,14 +47,10 @@ define(['buildable','underscore'], function(Buildable, undef) {
 					//////////////////////////////
 					// as a last resource, check if there is a 'anything' card
 					// which should be named by the tokenRegExp itself
-					item = this.cards[ this.token.str ];
-					token = [original];
+					res[aliases.item] = this.cards[ this.token.str ];
+					res[aliases.token] = original;
 				}
 			}
-
-			var res = {};
-			res[aliases.item] = item;
-			res[aliases.token] = tokens;
 
 			return res;
 		},
@@ -77,10 +73,14 @@ define(['buildable','underscore'], function(Buildable, undef) {
 
 			if (retrieved) {
 				var aliases = this.aliases,
-					tokens = retrieved[ aliases.token ] || [];
+					token = retrieved[ aliases.token ],
 					item = retrieved[ aliases.item ];
 
-				return typeof item === 'function' ? item.apply(this.context, tokens.concat(args)) : retrieved;
+				if (token) {
+					args.unshift(token);
+				}
+
+				return typeof item === 'function' ? item.apply(this.context, args) : retrieved;
 			} else {
 				return undefined;
 			}
@@ -110,7 +110,7 @@ define(['buildable','underscore'], function(Buildable, undef) {
 
 			this.aliases = {
 				item: options.itemAlias || 'item',
-				token: options.tokenAlias || 'tokens',
+				token: options.tokenAlias || 'token',
 			};
 
 			this.context = options.context;

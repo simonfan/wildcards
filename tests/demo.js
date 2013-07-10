@@ -12,8 +12,8 @@ define(['wildcards'], function(Wildcards) {
 */
 
 	window.wildcards = Wildcards.build({
-		itemAlias: 'func',
-		tokenAlias: 'fruits',
+		itemAlias: 'callback',
+		tokenAlias: 'fruit',
 		context: {
 			a: 'lalala'
 		}
@@ -40,6 +40,12 @@ define(['wildcards'], function(Wildcards) {
 		}
 	});
 
-	var filter = function(item) { console.log(item); return typeof item === 'function' };
-	wildcards.exec('fruits:yellow:abacaxi', filter, ['one','two']);
+	var filter = function(card) {
+		return card.fruit !== 'abacaxi';
+	};
+
+
+	window.res = wildcards.exec('fruits:yellow:abacaxi', filter, ['one','two']);
+
+	console.log(res);
 });
