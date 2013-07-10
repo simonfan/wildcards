@@ -48,17 +48,12 @@ define(['buildable','underscore'], function(Buildable, undef) {
 			}
 		},
 
-		exec: function() {
-			var args = _.args(arguments);
-			args.unshift('retrieve');
+		exec: function(str) {
+			var retrieved = this.wild.apply(this, ['retrieve', str]),
+				args = _.args(arguments, 1);
 
-			var retrieved = this.wild.apply(this, args);
-
-			if (typeof retrieved === 'undefined') { return undefined; }
-
-			console.log(retrieved);
-
-			return (typeof retrieved.item === 'function') ? retrieved.item.apply(this.context, retrieved.tokens) : retrieved;
+			return (typeof retrieved.item === 'function') ? 
+				retrieved.item.apply(this.context, retrieved.tokens.concat(args)) : retrieved;
 		}
 	};
 

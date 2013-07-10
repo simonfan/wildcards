@@ -9,7 +9,11 @@ define(['wildcards'], function(Wildcards) {
 	});
 
 
-	wildcards.card('fruits:yellow:%', function(fruit) { console.log( this.a + ' ' + fruit)} );
+	wildcards.card('fruits:yellow:%', function(fruit, arg1, arg2) {
+		console.log( this.a + ' ' + fruit)
+		console.log('arg1: ' + arg1);
+		console.log('arg2: ' + arg2);
+	});
 
 	wildcards.card({
 		'fruits:%': function(fruits) {
