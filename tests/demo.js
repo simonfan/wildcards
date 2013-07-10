@@ -1,5 +1,15 @@
 define(['wildcards'], function(Wildcards) {
 
+/*
+	options: {
+		delimiter: ':',
+		token: '*',
+		tokenRegExp: /\*.* /,
+		itemAlias: 'item',
+		tokenAlias: 'tokens',
+		context: undefined
+	}
+*/
 
 	window.wildcards = Wildcards.build({
 		itemAlias: 'func',

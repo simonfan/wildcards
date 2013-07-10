@@ -74,6 +74,8 @@ define(['buildable','underscore'], function(Buildable, undef) {
 	Wildcards.extend({
 
 		init: function(options) {
+			options = options || {};
+
 			// alerts
 			if ((!options.token && options.tokenRegExp) || (options.token && !options.tokenRegExp)) {
 				throw new Error('Wildcards: you must set either both tokenRegExp and token or neither one.');
@@ -95,6 +97,7 @@ define(['buildable','underscore'], function(Buildable, undef) {
 
 			this.context = options.context;
 
+			// CARDS HASH
 			this.cards = {};
 		},
 
