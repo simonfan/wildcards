@@ -71,7 +71,7 @@ define(['buildable','underscore'], function(Buildable, undef) {
 			}
 		},
 
-		exec: function(str, args, filter) {
+		exec: function(str, filter, args) {
 			var retrieved = this.wild.apply(this, ['retrieve', str, filter]),
 				args = _.isArray(args) ? args : [];
 

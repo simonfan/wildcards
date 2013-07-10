@@ -41,5 +41,5 @@ define(['wildcards'], function(Wildcards) {
 	});
 
 	var filter = function(item) { console.log(item); return typeof item === 'function' };
-	wildcards.exec('fruits:yellow:abacaxi', ['one','two'], filter);
+	wildcards.exec('fruits:yellow:abacaxi', filter, ['one','two']);
 });
