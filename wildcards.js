@@ -9,8 +9,8 @@ define(['buildable','underscore'], function(Buildable, undef) {
 				});
 
 			} else {
-				// remove the token part
-				var path = name.replace(this.token,'');
+				// remove the tokenRegExp part
+				var path = (name === this.token) ? name : name.replace(this.tokenRegExp,'');
 
 				// save the card
 				this.cards[ path ] = obj;
@@ -40,10 +40,15 @@ define(['buildable','underscore'], function(Buildable, undef) {
 				if (str.length > 0) {
 					str = str.join(this.delimiter) + this.delimiter;
 
-					console.log(str);
 					return this.wild('retrieve', str, original);
+
 				} else {
-					return undefined;
+					// as a last resource, check if there is a 'anything' card
+					// which should be named by the tokenRegExp itself
+					return {
+						item: this.cards[ this.token ],
+						tokens: [original]
+					};
 				}
 			}
 		},
@@ -52,7 +57,7 @@ define(['buildable','underscore'], function(Buildable, undef) {
 			var retrieved = this.wild.apply(this, ['retrieve', str]),
 				args = _.args(arguments, 1);
 
-			return (typeof retrieved.item === 'function') ? 
+			return (retrieved && typeof retrieved.item === 'function') ? 
 				retrieved.item.apply(this.context, retrieved.tokens.concat(args)) : retrieved;
 		}
 	};
@@ -66,7 +71,8 @@ define(['buildable','underscore'], function(Buildable, undef) {
 
 			this.delimiter = options.delimiter || ':';
 
-			this.token = options.token || /\*.*/;
+			this.token = (options.token && options.tokenRegExp) ? options.token : '*';
+			this.tokenRegExp = (options.token && options.tokenRegExp) ? options.tokenRegExp : /\*.*/;
 
 			this.context = options.context;
 
