@@ -83,8 +83,9 @@ define(['buildable','underscore'], function(Buildable, undef) {
 
 				if (token) {
 					if (_.isArray(token)) {
+						token = _.compact(token);
 						args = token.concat(args);
-					} else {
+					} else if (token != '') {
 						args.unshift(token);
 					}
 				}
