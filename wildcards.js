@@ -26,7 +26,11 @@ define(['buildable','underscore'], function(Buildable, undef) {
 				res = {};
 
 			res[aliases.item] = this.cards[ str ];
-			res[aliases.token] = original.replace(str,'').split(this.token.delimiter);
+			res[aliases.token] = original.replace(str,'');
+
+			if (this.token.delimiter) {
+				res[ aliases.token ] = res[ aliases.token ].split(this.token.delimiter);
+			}
 
 			// 1: if the item is not set
 			// 2: if the filter is a function AND the filter returns false
@@ -111,7 +115,7 @@ define(['buildable','underscore'], function(Buildable, undef) {
 			this.token = {
 				str: (options.token && options.tokenRegExp) ? options.token : '*',
 				regexp: (options.token && options.tokenRegExp) ? options.tokenRegExp : /\*.*/,
-				delimiter: options.tokenDelimiter || '-',
+				delimiter: options.tokenDelimiter || false,
 			}
 
 			this.aliases = {
@@ -132,6 +136,7 @@ define(['buildable','underscore'], function(Buildable, undef) {
 
 		card: wild.card,
 		retrieve: wild.retrieve,
+		match: wild.retrieve,
 		exec: wild.exec
 	});
 
